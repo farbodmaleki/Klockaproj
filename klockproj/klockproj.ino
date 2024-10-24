@@ -7,59 +7,59 @@
 */
 
 // Include Libraries
-#include <RTClib.h>
-#include <Adafruit_NeoPixel.h>
-#include <Wire.h>
-#include "U8glib.h"
-#include <Servo.h>
+#include <RTClib.h> // Bibliotek för RTC (Real Time Clock) DS3231
+#include <Adafruit_NeoPixel.h> // Bibliotek för att styra NeoPixel LED-ringen
+#include <Wire.h>  //I2C-kommunikationsbibliotek
+#include "U8glib.h" // Bibliotek för att styra OLED-skärmen
+#include <Servo.h> // Bibliotek för att styra servomotorn
 
 // Init constants
-const int tempPin = A1;
+const int tempPin = A1; // Analog pin för att läsa temperaturen från sensorn
 
 // Init global variables
-#define NUMPIXELS 24
-#define PIN 6
-float temp = 0;
-int delayval = 5;  // timing delay for ledring
+#define NUMPIXELS 24  // Antal LEDs i NeoPixel-ringen
+#define PIN 6 // Digital pin där NeoPixel-ringen är ansluten
+float temp = 0; // Variabel för att lagra temperaturen
+int delayval = 5;  // Fördröjningstid för LED-ringens ljussekvens
 
-char t[32];
+char t[32];  // Strängbuffer för att lagra tid som ska visas
 
 // construct objects
-RTC_DS3231 rtc;
-U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NO_ACK);  // Display which does not send AC
-Servo myservo;
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+RTC_DS3231 rtc;  // Skapa ett objekt för RTC (Real Time Clock)
+U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NO_ACK);  // Skapa objekt för OLED-displayen
+Servo myservo;  // Skapa ett servo-objekt
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);  // Skapa objekt för NeoPixel LED-ringen
 
 void setup() {
   // init communication
-  Serial.begin(9600);
-  Wire.begin();
+  Serial.begin(9600); // Starta seriell kommunikation med baud rate 9600
+  Wire.begin(); // Starta I2C-kommunikation
 
   // Init Hardware
-  rtc.begin();
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  u8g.setFont(u8g_font_unifont);
-  myservo.attach(9);
-  pixels.begin();
-  pixels.setBrightness(25);
-  pixels.show();
+  rtc.begin();  // Starta RTC
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); 
+  u8g.setFont(u8g_font_unifont);  // Ställ in teckensnittet för OLED-skärmen
+  myservo.attach(9); // Anslut servomotorn till digital pin 9
+  pixels.begin(); // Initiera NeoPixel-ringen
+  pixels.setBrightness(25); // Ställ in ljusstyrkan på LED-ringen till 25%
+  pixels.show(); // Uppdatera LED-ringen med den inställda ljusstyrkan
 }
 
 void loop() {
   
-  Serial.println("The time is " + getTime());
+  Serial.println("The time is " + getTime());   // Hämta och skriv ut tiden
   delay(100);
-  oledWrite(getTime());
-  servoWrite(getTemp());
-  Serial.println(getTemp());
+  oledWrite(getTime()); // Skriv tiden på OLED-displayen
+  servoWrite(getTemp()); // Ställ servomotorn baserat på aktuell temperatur
+  Serial.println(getTemp()); // Skriv ut temperaturen i seriell monitor
   delay(100);
 
   // LED ring behavior based on temperature
-  if (getTemp() <= 24) {
-    ledringBlue();
+  if (getTemp() <= 24) { // Om temperaturen är mindre än eller lika med 24 grader
+    ledringBlue();  // Tänd LED-ringen i blått
   } 
-  else if (getTemp() >= 30) {
-    ledringRed();
+  else if (getTemp() >= 30) {  // Om temperaturen är större än eller lika med 30 grader
+    ledringRed(); // Tänd LED-ringen i rött
   }
 }
 
@@ -70,7 +70,7 @@ void loop() {
 *Returns: time in hh:mm:ss as String
 */
 String getTime() {
-  DateTime now = rtc.now();
+  DateTime now = rtc.now();  // Hämta aktuell tid från RTC-modulen
   return (String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second()));
 }
 
@@ -99,12 +99,12 @@ float getTemp() {
 *Returns: void
 */
 void oledWrite(String text) {
-  u8g.firstPage();
+  u8g.firstPage(); // Starta den första sidan av uppdateringscykeln för OLED-displayen
   do {
-    u8g.drawStr(0, 20, text.c_str());
-    u8g.setPrintPos(0, 40);
-    u8g.print(temp);
-  } while (u8g.nextPage());
+    u8g.drawStr(0, 20, text.c_str());  // Rita strängen på position (0, 20) på OLED-skärmen
+    u8g.setPrintPos(0, 40);  // Ställ in positionen för att skriva ut temperatur
+    u8g.print(temp);  // Skriv ut den aktuella temperaturen på displayen
+  } while (u8g.nextPage());  // Gå till nästa sida tills alla sidor är ritade alltså while
 }
 
 /*
@@ -113,7 +113,7 @@ void oledWrite(String text) {
 *Returns: void
 */
 void servoWrite(float value) {
-  myservo.write(map(value, 20, 30, 0, 179));
+  myservo.write(map(value, 20, 30, 0, 179));  // Mappa temperaturvärdet till en vinkel mellan 0 och 179 grader för servon
 }
 
 /*
@@ -122,10 +122,10 @@ void servoWrite(float value) {
 *Returns: void
 */
 void ledringRed() {
-  for (int i = 0; i < NUMPIXELS; i++) {
-    pixels.setPixelColor(i, pixels.Color(255, 0, 0));  // Red color
+  for (int i = 0; i < NUMPIXELS; i++) {  // Loop för att sätta färg på varje LED i ringen
+    pixels.setPixelColor(i, pixels.Color(255, 0, 0));   // Ställ in aktuell LED till röd färg
   }
-  pixels.show();  // Send updated colors to the LED ring
+  pixels.show();  // Skicka de uppdaterade färgerna till LED-ringen
 }
 
 /*
@@ -135,7 +135,7 @@ void ledringRed() {
 */
 void ledringBlue() {
   for (int i = 0; i < NUMPIXELS; i++) {
-    pixels.setPixelColor(i, pixels.Color(0, 0, 255));  // Blue color
+    pixels.setPixelColor(i, pixels.Color(0, 0, 255));  // Loop för att sätta färg på varje LED i ringen
   }
-  pixels.show();  // Send updated colors to the LED ring
+  pixels.show();  // Skicka de uppdaterade färgerna till LED-ringen
 }
