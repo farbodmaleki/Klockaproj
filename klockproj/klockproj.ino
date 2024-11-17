@@ -137,5 +137,5 @@ void ledringBlue() {
   for (int i = 0; i < NUMPIXELS; i++) {
     pixels.setPixelColor(i, pixels.Color(0, 0, 255));  // Loop för att sätta färg på varje LED i ringen
   }
-  pixels.show();  // Skicka de uppdaterade färgerna till LED-ringen
+  pixels.show();  // Skicka de uppdaterade färgerna till LED-ringen bkkjjkkuhuijik
 }
